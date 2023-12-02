@@ -2,8 +2,6 @@
 #define T0TC        (*(volatile unsigned int*)0x40004008)
 #define T1TCR       (*(volatile unsigned int*)0x40008004)
 #define T1TC 		(*(volatile unsigned int*)0x40008008)
-#define T2TCR       (*(volatile unsigned int*)0x40090004)
-#define T2TC 		(*(volatile unsigned int*)0x40090008)
 #define PINSEL1     (*(volatile unsigned int*)0x4002C004)
 #define DACCTRL     (*(volatile unsigned int*)0x4008C004)
 #define DACR        (*(volatile unsigned int*)0x4008C000)
@@ -13,7 +11,6 @@
 #define I2C0SCLH 	(*(volatile unsigned int*)0x4001C010)
 #define I2C0SCLL 	(*(volatile unsigned int*)0x4001C014)
 #define I2C0CONCLR  (*(volatile unsigned int*)0x4001C018)
-#define CCR			(*(volatile unsigned int*)0x40024008)
 #define FIO0DIR     (*(volatile unsigned int*)0x2009c000) // defines on port 0 that we can use the DIR function
 #define FIO2DIR     (*(volatile unsigned int*)0x2009c040) // defines on port 2 that we can use the DIR function
 #define FIO2PIN     (*(volatile unsigned int*)0x2009c054) // defines on port 2 that we can use the PIN function
@@ -21,41 +18,41 @@
 int input[4][4] = {{1,2,3,10},{4,5,6,11},{7,8,9,12},{13,0,14,15}}; // A =10,B =11, C=12,* =13,# =14, D=15
 int hourCount =0; //switch hour counter
 int minuteCount=0; //switch minute counter
-int GPIOAAddress =  0x12;
+int GPIOAAddress =  0x12; // address for IO expander on GPIOA
 int OPYCODE =  0b01000000; // 0100 0000
-int IODIRA =  0x00;
+int IODIRA =  0x00; //hex for address
 int count,time, hour, minute, second,k,timeElasped,hour1,minute1,second1,difference, alarmButton;
-int Coords0[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,2,3,4,5,6,7,8,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,2,3,4,5,6,7,8,9, 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,15,15,15,15,15,15,15,15,15,14,13,12,11,10,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1};
-int Coords1[] = {3,4,1,2,3,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,6,7,8,9, 13,14,0,0,0,0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0,0,0,0,0};
-int Coords2[] = {1,2,3,4,5,6,7,8,9,9,9,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1,1,1,2,3,4,5,6,7,8,9, 15,15,15,15,15,15,15,15,14,13,12,11,10,9,9,9,9,9,9,9,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1};
-int Coords3[] = {1,2,3,4,5,6,7,8,9,9,9,9,9,8,7,6,5,4,3,2,9,9,9,9,9,9,9,9,9,9,9,2,3,4,5,6,7,8,9, 15,15,15,15,15,15,15,15,14,13,12,11,10,9,9,9,9,9,9,9,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1};
-int Coords4[] = {1,1,1,1,1,1,9,9,9,9,9,9,8,7,6,5,4,3,2,9,9,9,9,9,9,9,9,9,9,9,9, 15,14,13,12,11,10,15,14,13,12,11,10,9,9,9,9,9,9,9,9,9,8,7,6,5,4,3,2,1,1};
-int Coords5[] = {1,2,3,4,5,6,7,8,1,1,1,1,1,8,7,6,5,4,3,2,1,1,1,1,9,9,9,9,9,9,9,2,3,4,5,6,7,8,9, 15,15,15,15,15,15,15,15,14,13,12,11,10,9,9,9,9,9,9,9,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1};
-int Coords6[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,2,3,4,5,6,7,8,9,9,9,9,8,7,6,5,4,3,2,9,9,9,9,9,9,9,2,3,4,5,6,7,8,9, 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,15, 15,15,15,15,15,15,15,9,9,9,9,9,9,9,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1};
-int Coords7[] = {1,2,3,4,5,6,7,8,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, 15,15,15,15,15,15,15,15,14,13,12,11,10,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1};
-int Coords8[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,2,3,4,5,6,7,8,9,9,9,9,9,8,7,6,5,4,3,2,9,9,9,9,9,9,9,9,9,9,9,2,3,4,5,6,7,8,9, 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,15, 15,15,15,15,15,15,15,14,13,12,11,10,9,9,9,9,9,9,9,9,9,8,7,6,5,4,3,2};
-int Coords9[] = {1,1,1,1,1,1,1,1,1, 1,2,3,4,5,6,7,8,9,9,9,9,9,8,7,6,5,4,3,2,9,9,9,9,9,9,9,9,9,9,9,2,3,4,5,6,7,8,9, 8,9,10,11,12,13,14,15,15, 15,15,15,15,15,15,15,14,13,12,11,10,9,9,9,9,9,9,9,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1};
-int time1[] = {0,0,0,0,0,0};
-int time2[] = {0,0,0,0,0,0};
-int gatherTime[] = {0,0,0,0,0,0};
-int ooga[6];
+int Coords0[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,2,3,4,5,6,7,8,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,2,3,4,5,6,7,8,9, 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,15,15,15,15,15,15,15,15,15,14,13,12,11,10,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1}; // coords for 0
+int Coords1[] = {3,4,1,2,3,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,6,7,8,9, 13,14,0,0,0,0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0,0,0,0,0}; // coords for 1
+int Coords2[] = {1,2,3,4,5,6,7,8,9,9,9,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1,1,1,2,3,4,5,6,7,8,9, 15,15,15,15,15,15,15,15,14,13,12,11,10,9,9,9,9,9,9,9,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1}; // coords for 2
+int Coords3[] = {1,2,3,4,5,6,7,8,9,9,9,9,9,8,7,6,5,4,3,2,9,9,9,9,9,9,9,9,9,9,9,2,3,4,5,6,7,8,9, 15,15,15,15,15,15,15,15,14,13,12,11,10,9,9,9,9,9,9,9,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1}; // coords for 3
+int Coords4[] = {1,1,1,1,1,1,9,9,9,9,9,9,8,7,6,5,4,3,2,9,9,9,9,9,9,9,9,9,9,9,9, 15,14,13,12,11,10,15,14,13,12,11,10,9,9,9,9,9,9,9,9,9,8,7,6,5,4,3,2,1,1}; // coords for 4
+int Coords5[] = {1,2,3,4,5,6,7,8,1,1,1,1,1,8,7,6,5,4,3,2,1,1,1,1,9,9,9,9,9,9,9,2,3,4,5,6,7,8,9, 15,15,15,15,15,15,15,15,14,13,12,11,10,9,9,9,9,9,9,9,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1};// coords for 5
+int Coords6[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,2,3,4,5,6,7,8,9,9,9,9,8,7,6,5,4,3,2,9,9,9,9,9,9,9,2,3,4,5,6,7,8,9, 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,15, 15,15,15,15,15,15,15,9,9,9,9,9,9,9,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1};// coords for 6
+int Coords7[] = {1,2,3,4,5,6,7,8,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, 15,15,15,15,15,15,15,15,14,13,12,11,10,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1};// coords for 7
+int Coords8[] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,2,3,4,5,6,7,8,9,9,9,9,9,8,7,6,5,4,3,2,9,9,9,9,9,9,9,9,9,9,9,2,3,4,5,6,7,8,9, 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,15, 15,15,15,15,15,15,15,14,13,12,11,10,9,9,9,9,9,9,9,9,9,8,7,6,5,4,3,2};// coords for 8
+int Coords9[] = {1,1,1,1,1,1,1,1,1, 1,2,3,4,5,6,7,8,9,9,9,9,9,8,7,6,5,4,3,2,9,9,9,9,9,9,9,9,9,9,9,2,3,4,5,6,7,8,9, 8,9,10,11,12,13,14,15,15, 15,15,15,15,15,15,15,14,13,12,11,10,9,9,9,9,9,9,9,9,9,8,7,6,5,4,3,2,1,1,1,1,1,1,1,1,1};// coords for 9
+int time1[] = {0,0,0,0,0,0}; // array for the master clock time
+int time2[] = {0,0,0,0,0,0}; // array for the elapsed time
+int gatherTime[] = {0,0,0,0,0,0}; // array for the user inputted time
+int stoppedTime[6]; // array for stopped time
 void init()
 {
 	PINSEL1 |= (1<<21); //analogOUT
 	PINSEL1 |= (1<<22);
 	PINSEL1 |= (1<<24);
-	I2C0SCLH = 5;
+	I2C0SCLH = 5; //I2C configuration for the SCLK
 	I2C0SCLL = 5;
 	I2C0CONCLR = (1<<6);
 	I2C0CONSET = (1<<6);
-	for(int i =0;i<4;i++)
+	for(int i =0;i<4;i++) //initializes the input/ouputs and pulldown switches
 	{
 		FIO2DIR &= ~(1<< i);
 		PINMODE4 |= (1u << 2*i)|(1u<< (2*i+1));
 		FIO2DIR |= (1<<(i+4));
 	}
 }
-void keypad()
+void keypad() // double for loop is used to iterate over a 2D array to check the state of the switches and is then populating an array with the user inputted values. this function also updates the screen as the user inputs numbers.
 {
 timer(300000);
 while(k<6)
@@ -76,7 +73,7 @@ while(k<6)
 	WriteTimeTotal(gatherTime);
   }
 }
-int * coords (int number)
+int * coords (int number) //switch case containing all of the coordinates for access
 {
 	switch(number)
 	{
@@ -93,13 +90,13 @@ int * coords (int number)
 	}
 			return 0;
 }
-int size(int number)
+int size(int number) //function that returns the length of the coordainte arrays
 {
 	int size[] = {48,27,39,39,31,39,50,24,55,47};
 	return size[number];
 }
 
-int yCoord(int number)
+int yCoord(int number) // function that returns the y coords hex to used based on master time
 {
 	int yCoord[] = {0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xA,0xB,0xC,0xD,0xE,0xF};
 	return yCoord[number];
@@ -142,14 +139,14 @@ int timer (int us)
 {
 	T1TCR |= (1<<0); //sets bit to activate timer
 	T1TC = 0; //sets timer to 0 for simplicity
-	while(T1TC < us);
+	while(T1TC < us); //simple wait function
 }
 void timer1()
 {
 	T0TCR |= (1<<0); //sets bit to activate timer
 	T0TC = 0; //sets timer to 0 for simplicity
 }
-int * timeConversion(int x)
+int * timeConversion(int x) // this function returns the proper array that contains either the master time or the elasped time, parameter is used to return either master,elasped, or resetted time.
 {
 	time = T0TC;
 	second = time/1000000;
@@ -171,7 +168,7 @@ int * timeConversion(int x)
 	second1 = timeElasped/1000000;
 	if(T0TC < difference)
 	{
-		second1 = second1*(-1);
+		second1 = second1*(-1); //abs idea to handle when the master time rolls over 59s and causes negative numbers when T0TC > difference
 		second1 = 59-second1;
 	}
 		if (second1==59)
@@ -190,7 +187,7 @@ int * timeConversion(int x)
 
 	int timeValues[] = {hour, minute, second};
 	int elaspedTimeValues[] = {hour1,minute1,second1};
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++) //populates new arrays with the number split into 6 digits for displaying
 	{
 		time1[i*2] = timeValues[i] / 10;
 	    time1[i*2+1] = timeValues[i] % 10;
@@ -209,7 +206,7 @@ int * timeConversion(int x)
 			return 0;
 		}
 }
-void writeOscilloscope(int i[],int whatNumber,int position)
+void writeOscilloscope(int i[],int whatNumber,int position) //function that actively writes to the oscilloscope with software and hardware DACs
 {
 	int blah1;
 	blah1 = size(whatNumber);
@@ -236,7 +233,7 @@ int main()
 	{
 		FIO2PIN |= (1<<7);
 		FIO2PIN |= (1<<4);
-		if((((FIO2PIN>>7)&1)==1) && (((FIO2PIN>>0)&1)==1))
+		if((((FIO2PIN>>7)&1)==1) && (((FIO2PIN>>0)&1)==1)) //checks if user wants to input time and goes to keypadd(); function
 		{
 			timer(300000);
 			FIO2PIN &= ~(1<<7);
@@ -249,7 +246,7 @@ int main()
 				gatherTime[i]=0;
 			k=0;
 		}
-		if((((FIO2PIN>>4)&1)==1) && (((FIO2PIN>>3)&1)==1))
+		if((((FIO2PIN>>4)&1)==1) && (((FIO2PIN>>3)&1)==1)) //checks if user wants to start the stop watch
 		{
 			FIO2PIN &= ~(1<<7);
 			FIO2PIN &= ~(1<<4);
@@ -257,34 +254,34 @@ int main()
 			while(1)
 			{
 				FIO2PIN |=(1<<5);
-				if((((FIO2PIN>>5)&1)==1) && (((FIO2PIN>>3)&1)==1))
+				if((((FIO2PIN>>5)&1)==1) && (((FIO2PIN>>3)&1)==1)) // checks if user wants to pause the stop watch
 				{
 					for(int i = 0; i<6; i++)
-						ooga[i] = time2[i];
+						stoppedTime[i] = time2[i];
 					int hm = 0;
 					FIO2PIN |= (1<<6);
 					while(hm < 1)
 					{
-						WriteTimeTotal(ooga);
-						if((((FIO2PIN>>6)&1)==1) && (((FIO2PIN>>3)&1)==1))
+						WriteTimeTotal(stoppedTime);
+						if((((FIO2PIN>>6)&1)==1) && (((FIO2PIN>>3)&1)==1)) // checks if user wants to unpause the stop watch
 							hm++;
 					}
 					FIO2PIN &= ~(1<<6);
-					hour1 = ooga[0]*10+ooga[1];
-					minute1 = ooga[2]*10+ooga[3];
-					difference = T0TC - ((ooga[4]*10+ooga[5]))*1000000;
+					hour1 = stoppedTime[0]*10+stoppedTime[1];
+					minute1 = stoppedTime[2]*10+stoppedTime[3];
+					difference = T0TC - ((stoppedTime[4]*10+stoppedTime[5]))*1000000;
 				}
 				else
 					WriteTimeTotal(timeConversion(2));
 				FIO2PIN &= ~(1<<5);
 				FIO2PIN |=(1<<7);
-				if((((FIO2PIN>>7)&1)==1) && (((FIO2PIN>>2)&1)==1))
+				if((((FIO2PIN>>7)&1)==1) && (((FIO2PIN>>2)&1)==1)) // checks if user wants to reset the stop watch
 				{
 					timeConversion(3);
 				}
 				FIO2PIN %= ~(1<<7);
 				FIO2PIN |= (1<<7);
-				if((((FIO2PIN>>7)&1)==1) && (((FIO2PIN>>3)&1)==1))
+				if((((FIO2PIN>>7)&1)==1) && (((FIO2PIN>>3)&1)==1)) // checks if user wants to go back to master time.
 				{
 					minute1 = 0;
 					hour1 = 0;
@@ -296,7 +293,7 @@ int main()
 			FIO2PIN &= ~(1<<6);
 			FIO2PIN &= ~(1<<7);
 			for(int i = 0; i<6; i++)
-				ooga[i] = 0;
+				stoppedTime[i] = 0;
 		}
 		WriteTimeTotal(timeConversion(1));
 	}
